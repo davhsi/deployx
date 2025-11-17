@@ -2,14 +2,19 @@ import express from 'express';
 import cors from 'cors';
 import simpleClone from 'simple-git';
 import { generate } from './utils';
-import path, { resolve } from 'path' 
+import path from 'path' 
 import { getAllFiles } from './file';
 import { uploadFile } from './aws';
 import { createClient } from 'redis';
+import { port, redisUrl } from './config';
 const app = express()
-const publisher = createClient();
+const publisher = createClient({
+    url: redisUrl
+});
 publisher.connect(); 
-const subscriber = createClient();
+const subscriber = createClient({
+    url: redisUrl
+});
 subscriber.connect();
 app.use(cors());
 app.use(express.json());
@@ -46,6 +51,6 @@ app.get('/status', async(req, res) => {
     }); 
 });  
 
-app.listen(3000,()=>{
-    console.log('Server is running on port 3000');
+app.listen(port,()=>{
+    console.log(`Server is running on port ${port}`);
 });

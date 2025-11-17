@@ -9,7 +9,10 @@ import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import axios from "axios"
 
-const BACKEND_UPLOAD_URL = "http://localhost:3000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const DEPLOY_DOMAIN = import.meta.env.VITE_DEPLOY_DOMAIN || "localhost";
+const DEPLOY_PROTOCOL = import.meta.env.VITE_DEPLOY_PROTOCOL || "https";
+
 
 export function Landing() {
   const [repoUrl, setRepoUrl] = useState("");
@@ -37,19 +40,22 @@ export function Landing() {
             </div>
             <Button onClick={async () => {
               setUploading(true);
-              const res = await axios.post(`${BACKEND_UPLOAD_URL}/deploy`, {
-                repoUrl: repoUrl
-              });
-              setUploadId(res.data.id);
-              setUploading(false);
-              const interval = setInterval(async () => {
-                const response = await axios.get(`${BACKEND_UPLOAD_URL}/status?id=${res.data.id}`);
+              try {
+                const res = await axios.post(`${API_BASE_URL}/deploy`, {
+                  repoUrl: repoUrl
+                });
+                setUploadId(res.data.id);
+                const interval = setInterval(async () => {
+                  const response = await axios.get(`${API_BASE_URL}/status?id=${res.data.id}`);
 
-                if (response.data.status === "deployed") {
-                  clearInterval(interval);
-                  setDeployed(true);
-                }
-              }, 3000)
+                  if (response.data.status === "deployed") {
+                    clearInterval(interval);
+                    setDeployed(true);
+                  }
+                }, 3000);
+              } finally {
+                setUploading(false);
+              }
             }} disabled={uploadId !== "" || uploading} className="w-full" type="submit">
               {uploadId ? `Deploying (${uploadId})` : uploading ? "Uploading..." : "Upload"}
             </Button>
@@ -64,11 +70,20 @@ export function Landing() {
         <CardContent>
           <div className="space-y-2">
             <Label htmlFor="deployed-url">Deployed URL</Label>
-            <Input id="deployed-url" readOnly type="url" value={`http://${uploadId}.dev.100xdevs.com:3001/index.html`} />
+            <Input
+              id="deployed-url"
+              readOnly
+              type="url"
+              value={uploadId ? `${DEPLOY_PROTOCOL}://${uploadId}.${DEPLOY_DOMAIN}/index.html` : ""}
+            />
           </div>
           <br />
           <Button className="w-full" variant="outline">
-            <a href={`http://${uploadId}.10kdevs.com/index.html`} target="_blank">
+            <a
+              href={uploadId ? `${DEPLOY_PROTOCOL}://${uploadId}.${DEPLOY_DOMAIN}/index.html` : "#"}
+              target="_blank"
+              rel="noreferrer"
+            >
               Visit Website
             </a>
           </Button>

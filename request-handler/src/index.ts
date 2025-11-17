@@ -1,10 +1,8 @@
 import expres from 'express';
 import {S3} from 'aws-sdk';
+import { awsConfig, s3BuildBucket, port } from './config';
 
-const s3 = new S3({
-    accessKeyId:'',
-    secretAccessKey:''
-});
+const s3 = new S3(awsConfig);
 
 const app = expres();
 
@@ -13,7 +11,7 @@ app.get('/*', async (req, res) => {
     const id = host.split(".")[0];
     const filePath = req.path;
     const contents = await s3.getObject({
-        Bucket: "harizibam",
+        Bucket: s3BuildBucket,
         Key:`dist/${id}${filePath}`
     }).promise(); 
 
@@ -23,6 +21,6 @@ app.get('/*', async (req, res) => {
     res.send(contents.Body);  
 });
 
-app.listen(3001, ()=>{
-    console.log('Server is running on port 3001');
+app.listen(port, ()=>{
+    console.log(`Server is running on port ${port}`);
 });

@@ -11,14 +11,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const redis_1 = require("redis");
 const aws_1 = require("./aws");
-const subscriber = (0, redis_1.createClient)();
+const utils_1 = require("./utils");
+const config_1 = require("./config");
+const subscriber = (0, redis_1.createClient)({
+    url: config_1.redisUrl
+});
 subscriber.connect();
+const publisher = (0, redis_1.createClient)({
+    url: config_1.redisUrl
+});
+publisher.connect();
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         while (1) {
             const res = yield subscriber.brPop((0, redis_1.commandOptions)({ isolated: true }), 'build-queue', 0);
+            //@ts-ignore
             const id = res.element;
             yield (0, aws_1.downloadS3Folder)(`output/${id}`);
+            yield (0, utils_1.buildProject)(id);
+            (0, utils_1.copyFinalDist)(id);
+            publisher.hSet("status", id, "deployed");
         }
     });
 }

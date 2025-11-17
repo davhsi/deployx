@@ -18,10 +18,8 @@ const child_process_1 = require("child_process");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const aws_sdk_1 = require("aws-sdk");
-const s3 = new aws_sdk_1.S3({
-    accessKeyId: '',
-    secretAccessKey: ''
-});
+const config_1 = require("./config");
+const s3 = new aws_sdk_1.S3(config_1.awsConfig);
 function buildProject(id) {
     return new Promise((resolve) => {
         var _a, _b;
@@ -62,7 +60,7 @@ const uploadFile = (fileName, localFilePath) => __awaiter(void 0, void 0, void 0
     const fileContent = fs_1.default.readFileSync(localFilePath);
     const response = yield s3.upload({
         Body: fileContent,
-        Bucket: "vercel",
+        Bucket: config_1.s3BuildBucket,
         Key: fileName,
     }).promise();
     console.log(response);

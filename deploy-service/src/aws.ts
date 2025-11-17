@@ -1,16 +1,14 @@
 import { S3 } from "aws-sdk";
 import fs from "fs";
 import path from "path";
+import { awsConfig, s3UploadBucket } from "./config";
 
-const s3 = new S3({
-    accessKeyId: "",
-    secretAccessKey: ""
-})
+const s3 = new S3(awsConfig);
 
 // output/asdasd
 export async function downloadS3Folder(prefix: string) {
     const allFiles = await s3.listObjectsV2({
-        Bucket: "vercel",
+        Bucket: s3UploadBucket,
         Prefix: prefix
     }).promise();
     
@@ -28,7 +26,7 @@ export async function downloadS3Folder(prefix: string) {
                 fs.mkdirSync(dirName, { recursive: true });
             }
             s3.getObject({
-                Bucket: "vercel",
+                Bucket: s3UploadBucket,
                 Key
             }).createReadStream().pipe(outputFile).on("finish", () => {
                 resolve("");

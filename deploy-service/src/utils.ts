@@ -2,11 +2,9 @@ import {exec, spawn }from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import {S3} from 'aws-sdk';
+import { awsConfig, s3BuildBucket } from './config';
 
-const s3 = new S3({
-    accessKeyId:'',
-    secretAccessKey:''
-});
+const s3 = new S3(awsConfig);
 export function buildProject(id:string){
     return new Promise((resolve)    => {
         const child = exec(`cd ${path.join(__dirname,`output/${id}`)} && npm install && npm run build`);
@@ -48,7 +46,7 @@ const uploadFile = async (fileName: string, localFilePath: string) => {
     const fileContent = fs.readFileSync(localFilePath);
     const response = await s3.upload({
         Body: fileContent,
-        Bucket: "vercel",
+        Bucket: s3BuildBucket,
         Key: fileName,
     }).promise();
     console.log(response);

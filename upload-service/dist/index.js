@@ -20,9 +20,16 @@ const path_1 = __importDefault(require("path"));
 const file_1 = require("./file");
 const aws_1 = require("./aws");
 const redis_1 = require("redis");
+const config_1 = require("./config");
 const app = (0, express_1.default)();
-const publisher = (0, redis_1.createClient)();
+const publisher = (0, redis_1.createClient)({
+    url: config_1.redisUrl
+});
 publisher.connect();
+const subscriber = (0, redis_1.createClient)({
+    url: config_1.redisUrl
+});
+subscriber.connect();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.post("/deploy", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -36,11 +43,22 @@ app.post("/deploy", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     files.forEach((file) => __awaiter(void 0, void 0, void 0, function* () {
         yield (0, aws_1.uploadFile)(file.slice(__dirname.length + 1), file);
     }));
+    yield new Promise(resolve => {
+        setTimeout(resolve, 5000);
+    });
     publisher.lPush("build-queue", id);
+    publisher.hSet("status", id, "uploaded");
     res.json({
         id: id
     });
 }));
-app.listen(3000, () => {
-    console.log('Server is running on port 3000');
+app.get('/status', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.query.id;
+    const response = yield subscriber.hGet("status", id);
+    res.json({
+        status: response
+    });
+}));
+app.listen(config_1.port, () => {
+    console.log(`Server is running on port ${config_1.port}`);
 });

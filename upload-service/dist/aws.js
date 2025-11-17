@@ -15,16 +15,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadFile = void 0;
 const aws_sdk_1 = require("aws-sdk");
 const fs_1 = __importDefault(require("fs"));
-const s3 = new aws_sdk_1.S3({
-    accessKeyId: '',
-    secretAccessKey: ''
-});
+const config_1 = require("./config");
+const s3 = new aws_sdk_1.S3(config_1.awsConfig);
 const uploadFile = (fileName, localFilePath) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("called");
     const fileContent = fs_1.default.readFileSync(localFilePath);
     const response = yield s3.upload({
         Body: fileContent,
-        Bucket: 'harizibam',
+        Bucket: config_1.s3UploadBucket,
         Key: fileName
     }).promise();
     console.log(response);

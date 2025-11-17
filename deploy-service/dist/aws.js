@@ -16,16 +16,14 @@ exports.downloadS3Folder = downloadS3Folder;
 const aws_sdk_1 = require("aws-sdk");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
-const s3 = new aws_sdk_1.S3({
-    accessKeyId: "",
-    secretAccessKey: ""
-});
+const config_1 = require("./config");
+const s3 = new aws_sdk_1.S3(config_1.awsConfig);
 // output/asdasd
 function downloadS3Folder(prefix) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         const allFiles = yield s3.listObjectsV2({
-            Bucket: "vercel",
+            Bucket: config_1.s3UploadBucket,
             Prefix: prefix
         }).promise();
         // 
@@ -42,7 +40,7 @@ function downloadS3Folder(prefix) {
                     fs_1.default.mkdirSync(dirName, { recursive: true });
                 }
                 s3.getObject({
-                    Bucket: "vercel",
+                    Bucket: config_1.s3UploadBucket,
                     Key
                 }).createReadStream().pipe(outputFile).on("finish", () => {
                     resolve("");
